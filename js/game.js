@@ -11,7 +11,11 @@ const gameState = {
   isPlaying: false,
   canTrigger: true,
   hasGyro: false,
-  lastBeta: 0
+  // 陀螺仪相关
+  baselineBeta: 0,
+  baselineGamma: 0,
+  lastTriggerTime: 0,
+  calibrationSamples: []
 };
 
 // DOM 元素
@@ -131,7 +135,6 @@ function showCurrentWord() {
   setTimeout(function() {
     elements.currentWord.textContent = word;
 
-    // 自适应字体大小
     const len = word.length;
     let fontSize = 80;
     if (len <= 2) fontSize = 80;
@@ -149,12 +152,16 @@ function showCurrentWord() {
 function handleCorrect() {
   if (!gameState.canTrigger || !gameState.isPlaying) return;
 
+  const now = Date.now();
+  if (now - gameState.lastTriggerTime < 1000) return;
+  gameState.lastTriggerTime = now;
+
   gameState.canTrigger = false;
   gameState.correctCount++;
   elements.correctCount.textContent = gameState.correctCount;
 
   showFeedback('correct');
-  vibrate([80, 40, 80]);
+  triggerHaptic('correct');
 
   setTimeout(function() {
     nextWord();
@@ -166,12 +173,16 @@ function handleCorrect() {
 function handleWrong() {
   if (!gameState.canTrigger || !gameState.isPlaying) return;
 
+  const now = Date.now();
+  if (now - gameState.lastTriggerTime < 1000) return;
+  gameState.lastTriggerTime = now;
+
   gameState.canTrigger = false;
   gameState.wrongCount++;
   elements.wrongCount.textContent = gameState.wrongCount;
 
   showFeedback('wrong');
-  vibrate([100, 30, 100]);
+  triggerHaptic('wrong');
 
   setTimeout(function() {
     nextWord();
@@ -197,10 +208,33 @@ function showFeedback(type) {
   }, 400);
 }
 
-// 振动反馈
-function vibrate(pattern) {
+// 触发触觉反馈
+function triggerHaptic(type) {
+  // Android 设备使用 Vibration API
   if (navigator.vibrate) {
-    navigator.vibrate(pattern);
+    if (type === 'correct') {
+      navigator.vibrate([80, 40, 80]);
+    } else {
+      navigator.vibrate([100, 30, 100]);
+    }
+  }
+
+  // iOS 设备使用 Haptic Feedback (需要用户交互触发)
+  // 通过播放静音音频并触发振动来模拟
+  try {
+    if (type === 'correct') {
+      // 轻触反馈
+      if (window.TapticEngine) {
+        window.TapticEngine.impact('light');
+      }
+    } else {
+      // 错误反馈
+      if (window.TapticEngine) {
+        window.TapticEngine.notification('error');
+      }
+    }
+  } catch (e) {
+    // 忽略不支持的情况
   }
 }
 
@@ -213,7 +247,8 @@ function startGame() {
   gameState.timeLeft = gameState.duration * 60;
   gameState.isPlaying = true;
   gameState.canTrigger = true;
-  gameState.lastBeta = 0;
+  gameState.lastTriggerTime = 0;
+  gameState.calibrationSamples = [];
 
   elements.correctCount.textContent = 0;
   elements.wrongCount.textContent = 0;
@@ -259,6 +294,7 @@ function startGyroscope() {
         if (permission === 'granted') {
           gameState.hasGyro = true;
           window.addEventListener('deviceorientation', handleOrientation);
+          console.log('陀螺仪已启用 (iOS)');
         }
       })
       .catch(function(error) {
@@ -268,30 +304,62 @@ function startGyroscope() {
     // 非iOS设备直接启用
     gameState.hasGyro = true;
     window.addEventListener('deviceorientation', handleOrientation);
+    console.log('陀螺仪已启用 (非iOS)');
   }
 }
 
 // 处理方向变化
 function handleOrientation(event) {
-  if (!gameState.isPlaying || !gameState.canTrigger) return;
+  if (!gameState.isPlaying) return;
 
-  const beta = event.beta; // 前后倾斜: -180 to 180
-  if (beta === null) return;
+  const beta = event.beta;   // 前后倾斜: -180 到 180 (绕X轴)
+  const gamma = event.gamma; // 左右倾斜: -90 到 90 (绕Y轴)
 
-  const threshold = 45;
+  if (beta === null || gamma === null) return;
 
-  // 检测向上翻转（答对）- beta < -45
-  if (beta < -threshold && gameState.lastBeta >= -threshold) {
-    console.log('向上翻转, beta:', beta);
+  // 校准阶段：收集前20个样本作为基准
+  if (gameState.calibrationSamples.length < 20) {
+    gameState.calibrationSamples.push({ beta: beta, gamma: gamma });
+    if (gameState.calibrationSamples.length === 20) {
+      // 计算基准值
+      let sumBeta = 0, sumGamma = 0;
+      gameState.calibrationSamples.forEach(function(s) {
+        sumBeta += s.beta;
+        sumGamma += s.gamma;
+      });
+      gameState.baselineBeta = sumBeta / 20;
+      gameState.baselineGamma = sumGamma / 20;
+      console.log('校准完成, 基准 beta:', gameState.baselineBeta.toFixed(1), 'gamma:', gameState.baselineGamma.toFixed(1));
+    }
+    return;
+  }
+
+  if (!gameState.canTrigger) return;
+
+  // 计算相对于基准的偏移
+  const deltaBeta = beta - gameState.baselineBeta;
+  const deltaGamma = gamma - gameState.baselineGamma;
+
+  const threshold = 50; // 触发阈值（度）
+
+  // 检测翻转方向
+  // 横屏握持时：
+  // - 向上翻转（屏幕上边缘抬起，朝向天花板）: deltaBeta 显著变正
+  // - 向下翻转（屏幕上边缘下压，朝向地面）: deltaBeta 显著变负
+
+  if (deltaBeta > threshold) {
+    // 向上翻转 = 答对
+    console.log('检测到向上翻转, deltaBeta:', deltaBeta.toFixed(1));
     handleCorrect();
-  }
-  // 检测向下翻转（答错）- beta > 45
-  else if (beta > threshold && gameState.lastBeta <= threshold) {
-    console.log('向下翻转, beta:', beta);
+    // 更新基准
+    gameState.baselineBeta = beta;
+  } else if (deltaBeta < -threshold) {
+    // 向下翻转 = 答错
+    console.log('检测到向下翻转, deltaBeta:', deltaBeta.toFixed(1));
     handleWrong();
+    // 更新基准
+    gameState.baselineBeta = beta;
   }
-
-  gameState.lastBeta = beta;
 }
 
 // 绑定事件
