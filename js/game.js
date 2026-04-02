@@ -12,10 +12,8 @@ const gameState = {
   canTrigger: true,
   hasGyro: false,
   // 陀螺仪相关
-  baselineBeta: 0,
-  baselineGamma: 0,
   lastTriggerTime: 0,
-  calibrationSamples: []
+  isWaitingForNeutral: false
 };
 
 // DOM 元素
@@ -250,7 +248,7 @@ function startGame() {
   gameState.isPlaying = true;
   gameState.canTrigger = true;
   gameState.lastTriggerTime = 0;
-  gameState.calibrationSamples = [];
+  gameState.isWaitingForNeutral = false;
 
   elements.correctCount.textContent = 0;
   elements.wrongCount.textContent = 0;
@@ -295,78 +293,62 @@ function endGame() {
 // 启动陀螺仪检测
 function startGyroscope() {
   // iOS 13+ 需要请求权限
-  if (typeof DeviceOrientationEvent !== 'undefined' &&
-      typeof DeviceOrientationEvent.requestPermission === 'function') {
-    DeviceOrientationEvent.requestPermission()
+  if (typeof DeviceMotionEvent !== 'undefined' &&
+      typeof DeviceMotionEvent.requestPermission === 'function') {
+    DeviceMotionEvent.requestPermission()
       .then(function(permission) {
         if (permission === 'granted') {
           gameState.hasGyro = true;
-          window.addEventListener('deviceorientation', handleOrientation);
-          console.log('陀螺仪已启用 (iOS)');
+          window.addEventListener('devicemotion', handleMotion);
+          console.log('运动传感器已启用 (iOS)');
         }
       })
       .catch(function(error) {
-        console.log('陀螺仪权限请求失败:', error);
+        console.log('运动传感器权限请求失败:', error);
       });
-  } else if (window.DeviceOrientationEvent) {
+  } else if (window.DeviceMotionEvent) {
     // 非iOS设备直接启用
     gameState.hasGyro = true;
-    window.addEventListener('deviceorientation', handleOrientation);
-    console.log('陀螺仪已启用 (非iOS)');
+    window.addEventListener('devicemotion', handleMotion);
+    console.log('运动传感器已启用 (非iOS)');
   }
 }
 
 // 处理方向变化
-function handleOrientation(event) {
+function handleMotion(event) {
   if (!gameState.isPlaying) return;
 
-  const beta = event.beta;   // 前后倾斜: -180 到 180 (绕X轴)
-  const gamma = event.gamma; // 左右倾斜: -90 到 90 (绕Y轴)
+  const z = event.accelerationIncludingGravity?.z;
 
-  if (beta === null || gamma === null) return;
+  if (z === null || z === undefined) return;
 
-  // 校准阶段：收集前20个样本作为基准
-  if (gameState.calibrationSamples.length < 20) {
-    gameState.calibrationSamples.push({ beta: beta, gamma: gamma });
-    if (gameState.calibrationSamples.length === 20) {
-      // 计算基准值
-      let sumBeta = 0, sumGamma = 0;
-      gameState.calibrationSamples.forEach(function(s) {
-        sumBeta += s.beta;
-        sumGamma += s.gamma;
-      });
-      gameState.baselineBeta = sumBeta / 20;
-      gameState.baselineGamma = sumGamma / 20;
-      console.log('校准完成, 基准 beta:', gameState.baselineBeta.toFixed(1), 'gamma:', gameState.baselineGamma.toFixed(1));
+  // 等待玩家将手机恢复到正常横屏握持姿势（Z轴加速度接近0）
+  if (gameState.isWaitingForNeutral) {
+    if (Math.abs(z) < 3) {
+      gameState.isWaitingForNeutral = false;
+      console.log('姿态已重置，可以进行下一次判定');
     }
     return;
   }
 
   if (!gameState.canTrigger) return;
 
-  // 计算相对于基准的偏移
-  const deltaBeta = beta - gameState.baselineBeta;
-  const deltaGamma = gamma - gameState.baselineGamma;
-
-  const threshold = 50; // 触发阈值（度）
+  const threshold = 6; // 触发阈值 (重力加速度最大约 9.8)
 
   // 检测翻转方向
-  // 横屏握持时：
-  // - 向上翻转（屏幕上边缘抬起，朝向天花板）: deltaBeta 显著变正
-  // - 向下翻转（屏幕上边缘下压，朝向地面）: deltaBeta 显著变负
+  // 向上翻转（屏幕朝天花板）: z > threshold
+  // 向下翻转（屏幕朝地面）: z < -threshold
 
-  if (deltaBeta > threshold) {
+  if (z > threshold) {
     // 向上翻转 = 答对
-    console.log('检测到向上翻转, deltaBeta:', deltaBeta.toFixed(1));
+    console.log('检测到向上翻转, z:', z.toFixed(1));
     handleCorrect();
-    // 更新基准
-    gameState.baselineBeta = beta;
-  } else if (deltaBeta < -threshold) {
+    gameState.isWaitingForNeutral = true;
+  } else if (z < -threshold) {
     // 向下翻转 = 答错
-    console.log('检测到向下翻转, deltaBeta:', deltaBeta.toFixed(1));
+    console.log('检测到向下翻转, z:', z.toFixed(1));
     handleWrong();
-    // 更新基准
-    gameState.baselineBeta = beta;
+    gameState.isWaitingForNeutral = true;
   }
 }
 
@@ -402,8 +384,7 @@ function pauseGame() {
 // 继续游戏
 function resumeGame() {
   gameState.isPlaying = true;
-  // 重新校准陀螺仪基准
-  gameState.calibrationSamples = [];
+  gameState.isWaitingForNeutral = false;
 }
 
 // 绑定事件
