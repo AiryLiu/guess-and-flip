@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="screen-orientation" content="landscape">
+  <title>你比划我猜</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 背景装饰 -->
+  <div class="bg-decoration">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- 首页 -->
+  <div id="page-home" class="page active">
+    <div class="container">
+      <div class="logo-container">
+        <div class="logo-icon">🎭</div>
+        <h1 class="title">
+          <span class="title-char" style="--delay: 0">你</span>
+          <span class="title-char" style="--delay: 1">比</span>
+          <span class="title-char" style="--delay: 2">划</span>
+          <span class="title-char" style="--delay: 3">我</span>
+          <span class="title-char" style="--delay: 4">猜</span>
+        </h1>
+        <p class="subtitle">聚会互动小游戏</p>
+      </div>
+      <button id="btn-start" class="btn-arcade">
+        <span class="btn-text">开始游戏</span>
+        <span class="btn-shine"></span>
+      </button>
+      <div class="guide-link" id="btn-guide">
+        <span class="guide-icon">?</span> 游戏说明
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏说明弹窗 -->
+  <div id="modal-guide" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>游戏说明</h2>
+        <div class="modal-icon">📖</div>
+      </div>
+      <div class="guide-steps">
+        <div class="step">
+          <div class="step-icon">1️⃣</div>
+          <div class="step-text">选择一个词语分类</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">2️⃣</div>
+          <div class="step-text">选择游戏时长</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">3️⃣</div>
+          <div class="step-text">横屏握持手机，屏幕朝上</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">👆</div>
+          <div class="step-text">手机向上翻转 = 答对</div>
+        </div>
+        <div class="step">
+          <div class="step-icon">👇</div>
+          <div class="step-text">手机向下翻转 = 答错/跳过</div>
+        </div>
+      </div>
+      <button class="btn-arcade btn-small" id="btn-close-guide">知道了</button>
+    </div>
+  </div>
+
+  <!-- 分类选择页 -->
+  <div id="page-category" class="page">
+    <div class="container">
+      <h2 class="page-title">
+        <span class="title-decorator">◀</span>
+        选择分类
+        <span class="title-decorator">▶</span>
+      </h2>
+      <div id="category-list" class="category-grid"></div>
+      <button class="btn-back" id="btn-back-category">← 返回</button>
+    </div>
+  </div>
+
+  <!-- 时长选择页 -->
+  <div id="page-duration" class="page">
+    <div class="container">
+      <h2 class="page-title">
+        <span class="title-decorator">◀</span>
+        选择时长
+        <span class="title-decorator">▶</span>
+      </h2>
+      <div class="duration-options">
+        <button class="duration-btn" data-duration="3">
+          <span class="duration-num">3</span>
+          <span class="duration-unit">分钟</span>
+        </button>
+        <button class="duration-btn active" data-duration="5">
+          <span class="duration-num">5</span>
+          <span class="duration-unit">分钟</span>
+        </button>
+        <button class="duration-btn" data-duration="8">
+          <span class="duration-num">8</span>
+          <span class="duration-unit">分钟</span>
+        </button>
+        <button class="duration-btn" data-duration="10">
+          <span class="duration-num">10</span>
+          <span class="duration-unit">分钟</span>
+        </button>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-back" id="btn-back-duration">← 返回</button>
+        <button class="btn-arcade" id="btn-begin">
+          <span class="btn-text">开始!</span>
+          <span class="btn-shine"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏页 -->
+  <div id="page-game" class="page game-page">
+    <!-- 翻转手机提示遮罩 -->
+    <div class="rotate-hint-overlay" id="rotate-hint">
+      <div class="rotate-hint-content">
+        <div class="rotate-phone-icon">📱</div>
+        <p class="rotate-hint-text">请翻转手机至横屏</p>
+        <div class="rotate-arrow">↻</div>
+      </div>
+    </div>
+
+    <!-- 游戏内容容器 - 竖屏时会旋转 -->
+    <div class="game-content-wrapper">
+      <div class="game-bg-effects">
+        <div class="corner-deco top-left"></div>
+        <div class="corner-deco top-right"></div>
+        <div class="corner-deco bottom-left"></div>
+        <div class="corner-deco bottom-right"></div>
+      </div>
+      <div class="game-header">
+        <div class="timer-container">
+          <div class="timer-label">剩余时间</div>
+          <div class="timer" id="timer">05:00</div>
+        </div>
+        <div class="score-container">
+          <div class="score-item correct">
+            <span class="score-icon">✓</span>
+            <span class="score-value" id="correct-count">0</span>
+          </div>
+          <div class="score-divider"></div>
+          <div class="score-item wrong">
+            <span class="score-icon">✗</span>
+            <span class="score-value" id="wrong-count">0</span>
+          </div>
+        </div>
+      </div>
+      <div class="word-display" id="word-display">
+        <div class="word-card">
+          <span id="current-word">词语</span>
+        </div>
+      </div>
+      <div class="game-footer">
+        <div class="hint-container">
+          <div class="hint hint-up">
+            <span class="hint-arrow">▲</span>
+            <span class="hint-text">答对</span>
+          </div>
+          <div class="hint hint-down">
+            <span class="hint-text">答错</span>
+            <span class="hint-arrow">▼</span>
+          </div>
+        </div>
+        <button class="btn-skip" id="btn-skip">
+          <span>跳过</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结果页 -->
+  <div id="page-result" class="page">
+    <div class="container">
+      <div class="result-header">
+        <div class="result-icon">🎉</div>
+        <h2 class="result-title">游戏结束!</h2>
+      </div>
+      <div class="result-stats">
+        <div class="result-card correct">
+          <div class="result-card-icon">✓</div>
+          <div class="result-card-content">
+            <div class="result-card-value" id="result-correct">0</div>
+            <div class="result-card-label">答对</div>
+          </div>
+          <div class="result-card-bubble"></div>
+        </div>
+        <div class="result-card wrong">
+          <div class="result-card-icon">✗</div>
+          <div class="result-card-content">
+            <div class="result-card-value" id="result-wrong">0</div>
+            <div class="result-card-label">答错</div>
+          </div>
+          <div class="result-card-bubble"></div>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-arcade" id="btn-replay">
+          <span class="btn-text">再来一局</span>
+          <span class="btn-shine"></span>
+        </button>
+        <button class="btn-ghost" id="btn-home">返回首页</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 翻转反馈遮罩 -->
+  <div id="feedback-overlay" class="feedback-overlay">
+    <div class="feedback-icon" id="feedback-icon"></div>
+  </div>
+
+  <script src="js/words.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
