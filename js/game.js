@@ -41,12 +41,14 @@ const elements = {
   correctCount: document.getElementById('correct-count'),
   wrongCount: document.getElementById('wrong-count'),
   currentWord: document.getElementById('current-word'),
+  btnCorrect: document.getElementById('btn-correct'),
   btnSkip: document.getElementById('btn-skip'),
   resultCorrect: document.getElementById('result-correct'),
   resultWrong: document.getElementById('result-wrong'),
   btnReplay: document.getElementById('btn-replay'),
   btnHome: document.getElementById('btn-home'),
-  feedbackOverlay: document.getElementById('feedback-overlay')
+  feedbackOverlay: document.getElementById('feedback-overlay'),
+  orientationOverlay: document.getElementById('orientation-overlay')
 };
 
 // 页面切换
@@ -256,16 +258,22 @@ function startGame() {
   updateTimer();
   showCurrentWord();
 
+  showPage('game');
+
+  // 检查横屏状态
+  checkOrientation();
+
   // 开始倒计时
   gameState.timerInterval = setInterval(function() {
-    gameState.timeLeft--;
-    updateTimer();
-    if (gameState.timeLeft <= 0) {
-      endGame();
+    if (gameState.isPlaying) {
+      gameState.timeLeft--;
+      updateTimer();
+      if (gameState.timeLeft <= 0) {
+        endGame();
+      }
     }
   }, 1000);
 
-  showPage('game');
   startGyroscope();
 }
 
@@ -362,6 +370,42 @@ function handleOrientation(event) {
   }
 }
 
+// 检查屏幕方向
+function checkOrientation() {
+  // 仅在游戏页面检查
+  if (!pages.game.classList.contains('active')) {
+    return;
+  }
+
+  const isLandscape = window.innerWidth > window.innerHeight;
+
+  if (isLandscape) {
+    // 横屏：隐藏提示，继续游戏
+    elements.orientationOverlay.classList.remove('show');
+    if (!gameState.isPlaying && gameState.timeLeft > 0) {
+      resumeGame();
+    }
+  } else {
+    // 竖屏：显示提示，暂停游戏
+    elements.orientationOverlay.classList.add('show');
+    if (gameState.isPlaying) {
+      pauseGame();
+    }
+  }
+}
+
+// 暂停游戏
+function pauseGame() {
+  gameState.isPlaying = false;
+}
+
+// 继续游戏
+function resumeGame() {
+  gameState.isPlaying = true;
+  // 重新校准陀螺仪基准
+  gameState.calibrationSamples = [];
+}
+
 // 绑定事件
 function bindEvents() {
   elements.btnStart.addEventListener('click', function() {
@@ -388,6 +432,10 @@ function bindEvents() {
     startGame();
   });
 
+  elements.btnCorrect.addEventListener('click', function() {
+    handleCorrect();
+  });
+
   elements.btnSkip.addEventListener('click', function() {
     handleWrong();
   });
@@ -404,6 +452,12 @@ function bindEvents() {
     if (e.target === elements.modalGuide) {
       elements.modalGuide.classList.remove('show');
     }
+  });
+
+  // 横屏检测
+  window.addEventListener('resize', checkOrientation);
+  window.addEventListener('orientationchange', function() {
+    setTimeout(checkOrientation, 100);
   });
 
   // 阻止默认滚动

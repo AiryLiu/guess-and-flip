@@ -100,6 +100,10 @@
         <span class="title-decorator">▶</span>
       </h2>
       <div class="duration-options">
+        <button class="duration-btn" data-duration="0.5">
+          <span class="duration-num">30</span>
+          <span class="duration-unit">秒</span>
+        </button>
         <button class="duration-btn" data-duration="3">
           <span class="duration-num">3</span>
           <span class="duration-unit">分钟</span>
@@ -179,9 +183,14 @@
             <span class="hint-arrow">▼</span>
           </div>
         </div>
-        <button class="btn-skip" id="btn-skip">
-          <span>跳过</span>
-        </button>
+        <div class="game-actions">
+          <button class="btn-correct" id="btn-correct">
+            <span>✓ 答对</span>
+          </button>
+          <button class="btn-skip" id="btn-skip">
+            <span>跳过</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -224,6 +233,15 @@
   <!-- 翻转反馈遮罩 -->
   <div id="feedback-overlay" class="feedback-overlay">
     <div class="feedback-icon" id="feedback-icon"></div>
+  </div>
+
+  <!-- 横屏提示蒙层 -->
+  <div id="orientation-overlay" class="orientation-overlay">
+    <div class="orientation-content">
+      <div class="orientation-icon">📱</div>
+      <div class="orientation-arrow">↻</div>
+      <p class="orientation-text">请横屏游玩</p>
+    </div>
   </div>
 
   <script src="js/words.js"></script>
