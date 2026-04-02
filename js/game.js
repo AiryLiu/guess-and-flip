@@ -41,12 +41,12 @@ const elements = {
   currentWord: document.getElementById('current-word'),
   btnCorrect: document.getElementById('btn-correct'),
   btnSkip: document.getElementById('btn-skip'),
+  btnRestart: document.getElementById('btn-restart'),
   resultCorrect: document.getElementById('result-correct'),
   resultWrong: document.getElementById('result-wrong'),
   btnReplay: document.getElementById('btn-replay'),
   btnHome: document.getElementById('btn-home'),
-  feedbackOverlay: document.getElementById('feedback-overlay'),
-  orientationOverlay: document.getElementById('orientation-overlay')
+  feedbackOverlay: document.getElementById('feedback-overlay')
 };
 
 // 页面切换
@@ -100,15 +100,17 @@ function initDurationSelection() {
         b.classList.remove('active');
       });
       btn.classList.add('active');
-      gameState.duration = parseInt(btn.dataset.duration);
+      gameState.duration = parseFloat(btn.dataset.duration);
     });
   });
 }
 
 // 格式化时间
 function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
+  // 确保秒数不为负数，防止显示为负值
+  const safeSeconds = Math.max(0, seconds);
+  const mins = Math.floor(safeSeconds / 60);
+  const secs = safeSeconds % 60;
   return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
 }
 
@@ -258,8 +260,9 @@ function startGame() {
 
   showPage('game');
 
-  // 检查横屏状态
-  checkOrientation();
+  if (gameState.timerInterval) {
+    clearInterval(gameState.timerInterval);
+  }
 
   // 开始倒计时
   gameState.timerInterval = setInterval(function() {
@@ -352,41 +355,6 @@ function handleMotion(event) {
   }
 }
 
-// 检查屏幕方向
-function checkOrientation() {
-  // 仅在游戏页面检查
-  if (!pages.game.classList.contains('active')) {
-    return;
-  }
-
-  const isLandscape = window.innerWidth > window.innerHeight;
-
-  if (isLandscape) {
-    // 横屏：隐藏提示，继续游戏
-    elements.orientationOverlay.classList.remove('show');
-    if (!gameState.isPlaying && gameState.timeLeft > 0) {
-      resumeGame();
-    }
-  } else {
-    // 竖屏：显示提示，暂停游戏
-    elements.orientationOverlay.classList.add('show');
-    if (gameState.isPlaying) {
-      pauseGame();
-    }
-  }
-}
-
-// 暂停游戏
-function pauseGame() {
-  gameState.isPlaying = false;
-}
-
-// 继续游戏
-function resumeGame() {
-  gameState.isPlaying = true;
-  gameState.isWaitingForNeutral = false;
-}
-
 // 绑定事件
 function bindEvents() {
   elements.btnStart.addEventListener('click', function() {
@@ -421,6 +389,14 @@ function bindEvents() {
     handleWrong();
   });
 
+  elements.btnRestart.addEventListener('click', function() {
+    // 清除原有计时器
+    if (gameState.timerInterval) {
+      clearInterval(gameState.timerInterval);
+    }
+    startGame();
+  });
+
   elements.btnReplay.addEventListener('click', function() {
     showPage('category');
   });
@@ -433,12 +409,6 @@ function bindEvents() {
     if (e.target === elements.modalGuide) {
       elements.modalGuide.classList.remove('show');
     }
-  });
-
-  // 横屏检测
-  window.addEventListener('resize', checkOrientation);
-  window.addEventListener('orientationchange', function() {
-    setTimeout(checkOrientation, 100);
   });
 
   // 阻止默认滚动
