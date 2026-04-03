@@ -301,6 +301,9 @@ function startGame() {
     gameState.timerInterval = null;
   }
 
+  // 陀螺仪权限需要在用户交互的直接调用栈中请求，所以提前调用
+  startGyroscope();
+
   startCountdown(function() {
     gameState.isPlaying = true;
     gameState.canTrigger = true;
@@ -316,8 +319,6 @@ function startGame() {
         }
       }
     }, 1000);
-
-    startGyroscope();
   });
 }
 
