@@ -752,6 +752,11 @@ html, body {
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
+.countdown-number.animate {
+  transform: scale(1);
+  opacity: 1;
+}
+
 /* 针对竖屏下的倒计时文字旋转 */
 @media (orientation: portrait) {
   .countdown-number {
@@ -760,11 +765,6 @@ html, body {
   .countdown-number.animate {
     transform: scale(1) rotate(90deg);
   }
-}
-
-.countdown-number.animate {
-  transform: scale(1);
-  opacity: 1;
 }
 
 /* ============================================
