@@ -531,11 +531,11 @@ html, body {
   font-size: 13px;
 }
 
-.hint-up .hint-arrow {
+.hint-correct .hint-arrow {
   color: var(--success);
 }
 
-.hint-down .hint-arrow {
+.hint-wrong .hint-arrow {
   color: var(--error);
 }
 
