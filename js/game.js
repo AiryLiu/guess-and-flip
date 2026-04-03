@@ -41,7 +41,6 @@ const elements = {
   currentWord: document.getElementById('current-word'),
   btnCorrect: document.getElementById('btn-correct'),
   btnSkip: document.getElementById('btn-skip'),
-  btnRestart: document.getElementById('btn-restart'),
   resultCorrect: document.getElementById('result-correct'),
   resultWrong: document.getElementById('result-wrong'),
   btnReplay: document.getElementById('btn-replay'),
@@ -137,13 +136,15 @@ function showCurrentWord() {
   setTimeout(function() {
     elements.currentWord.textContent = word;
 
+    // 根据词语长度自适应字号，基准 108px
     const len = word.length;
-    let fontSize = 80;
-    if (len <= 2) fontSize = 80;
-    else if (len <= 3) fontSize = 64;
-    else if (len <= 4) fontSize = 52;
-    else if (len <= 5) fontSize = 44;
-    else fontSize = 36;
+    let fontSize = 108;
+    if (len <= 2) fontSize = 108;
+    else if (len === 3) fontSize = 88;
+    else if (len === 4) fontSize = 72;
+    else if (len === 5) fontSize = 60;
+    else if (len <= 7) fontSize = 52;
+    else fontSize = 44;
 
     elements.currentWord.style.fontSize = fontSize + 'px';
     elements.currentWord.style.opacity = 1;
@@ -387,14 +388,6 @@ function bindEvents() {
 
   elements.btnSkip.addEventListener('click', function() {
     handleWrong();
-  });
-
-  elements.btnRestart.addEventListener('click', function() {
-    // 清除原有计时器
-    if (gameState.timerInterval) {
-      clearInterval(gameState.timerInterval);
-    }
-    startGame();
   });
 
   elements.btnReplay.addEventListener('click', function() {

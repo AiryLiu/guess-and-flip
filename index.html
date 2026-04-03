@@ -7,37 +7,22 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="screen-orientation" content="landscape">
   <title>你比划我猜</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- 背景装饰 -->
-  <div class="bg-decoration">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
-    <div class="grid-overlay"></div>
-  </div>
+  <!-- 纸张纹理背景 -->
+  <div class="bg-decoration"></div>
 
   <!-- 首页 -->
   <div id="page-home" class="page active">
     <div class="container">
       <div class="logo-container">
         <div class="logo-icon">🎭</div>
-        <h1 class="title">
-          <span class="title-char" style="--delay: 0">你</span>
-          <span class="title-char" style="--delay: 1">比</span>
-          <span class="title-char" style="--delay: 2">划</span>
-          <span class="title-char" style="--delay: 3">我</span>
-          <span class="title-char" style="--delay: 4">猜</span>
-        </h1>
+        <h1 class="title">你比划我猜</h1>
         <p class="subtitle">聚会互动小游戏</p>
       </div>
       <button id="btn-start" class="btn-arcade">
         <span class="btn-text">开始游戏</span>
-        <span class="btn-shine"></span>
       </button>
       <div class="guide-link" id="btn-guide">
         <span class="guide-icon">?</span> 游戏说明
@@ -81,11 +66,7 @@
   <!-- 分类选择页 -->
   <div id="page-category" class="page">
     <div class="container">
-      <h2 class="page-title">
-        <span class="title-decorator">◀</span>
-        选择分类
-        <span class="title-decorator">▶</span>
-      </h2>
+      <h2 class="page-title">选择分类</h2>
       <div id="category-list" class="category-grid"></div>
       <button class="btn-back" id="btn-back-category">← 返回</button>
     </div>
@@ -94,11 +75,7 @@
   <!-- 时长选择页 -->
   <div id="page-duration" class="page">
     <div class="container">
-      <h2 class="page-title">
-        <span class="title-decorator">◀</span>
-        选择时长
-        <span class="title-decorator">▶</span>
-      </h2>
+      <h2 class="page-title">选择时长</h2>
       <div class="duration-options">
         <button class="duration-btn" data-duration="0.5">
           <span class="duration-num">30</span>
@@ -125,7 +102,6 @@
         <button class="btn-back" id="btn-back-duration">← 返回</button>
         <button class="btn-arcade" id="btn-begin">
           <span class="btn-text">开始!</span>
-          <span class="btn-shine"></span>
         </button>
       </div>
     </div>
@@ -133,37 +109,19 @@
 
   <!-- 游戏页 -->
   <div id="page-game" class="page game-page">
-    <!-- 翻转手机提示遮罩 -->
-    <div class="rotate-hint-overlay" id="rotate-hint">
-      <div class="rotate-hint-content">
-        <div class="rotate-phone-icon">📱</div>
-        <p class="rotate-hint-text">请翻转手机至横屏</p>
-        <div class="rotate-arrow">↻</div>
-      </div>
-    </div>
-
-    <!-- 游戏内容容器 - 竖屏时会旋转 -->
+    <!-- 游戏内容容器 -->
     <div class="game-content-wrapper">
-      <div class="game-bg-effects">
-        <div class="corner-deco top-left"></div>
-        <div class="corner-deco top-right"></div>
-        <div class="corner-deco bottom-left"></div>
-        <div class="corner-deco bottom-right"></div>
-      </div>
       <div class="game-header">
         <div class="timer-container">
           <div class="timer-label">剩余时间</div>
           <div class="timer" id="timer">05:00</div>
         </div>
-        <button class="btn-restart" id="btn-restart">↻ 重新开始</button>
         <div class="score-container">
           <div class="score-item correct">
-            <span class="score-icon">✓</span>
             <span class="score-value" id="correct-count">0</span>
           </div>
           <div class="score-divider"></div>
           <div class="score-item wrong">
-            <span class="score-icon">✗</span>
             <span class="score-value" id="wrong-count">0</span>
           </div>
         </div>
@@ -214,7 +172,6 @@
             <div class="result-card-value" id="result-correct">0</div>
             <div class="result-card-label">答对</div>
           </div>
-          <div class="result-card-bubble"></div>
         </div>
         <div class="result-card wrong">
           <div class="result-card-icon">✗</div>
@@ -222,13 +179,11 @@
             <div class="result-card-value" id="result-wrong">0</div>
             <div class="result-card-label">答错</div>
           </div>
-          <div class="result-card-bubble"></div>
         </div>
       </div>
       <div class="action-buttons">
         <button class="btn-arcade" id="btn-replay">
           <span class="btn-text">再来一局</span>
-          <span class="btn-shine"></span>
         </button>
         <button class="btn-ghost" id="btn-home">返回首页</button>
       </div>
