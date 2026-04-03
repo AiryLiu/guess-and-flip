@@ -45,7 +45,9 @@ const elements = {
   resultWrong: document.getElementById('result-wrong'),
   btnReplay: document.getElementById('btn-replay'),
   btnHome: document.getElementById('btn-home'),
-  feedbackOverlay: document.getElementById('feedback-overlay')
+  feedbackOverlay: document.getElementById('feedback-overlay'),
+  countdownOverlay: document.getElementById('countdown-overlay'),
+  countdownNumber: document.getElementById('countdown-number')
 };
 
 // 页面切换
@@ -241,6 +243,38 @@ function triggerHaptic(type) {
   }
 }
 
+// 开始倒计时动画
+function startCountdown(callback) {
+  const overlay = elements.countdownOverlay;
+  const numberEl = elements.countdownNumber;
+
+  overlay.classList.add('show');
+  let count = 3;
+
+  function animateNumber(text) {
+    numberEl.classList.remove('animate');
+    numberEl.textContent = text;
+    // Force reflow
+    void numberEl.offsetWidth;
+    numberEl.classList.add('animate');
+  }
+
+  animateNumber(count);
+
+  const interval = setInterval(function() {
+    count--;
+    if (count > 0) {
+      animateNumber(count);
+    } else if (count === 0) {
+      animateNumber('开始!');
+    } else {
+      clearInterval(interval);
+      overlay.classList.remove('show');
+      if (callback) callback();
+    }
+  }, 1000);
+}
+
 // 开始游戏
 function startGame() {
   gameState.words = getShuffledWords(gameState.category);
@@ -248,8 +282,8 @@ function startGame() {
   gameState.correctCount = 0;
   gameState.wrongCount = 0;
   gameState.timeLeft = gameState.duration * 60;
-  gameState.isPlaying = true;
-  gameState.canTrigger = true;
+  gameState.isPlaying = false; // 倒计时期间不允许操作
+  gameState.canTrigger = false;
   gameState.lastTriggerTime = 0;
   gameState.isWaitingForNeutral = false;
 
@@ -257,26 +291,34 @@ function startGame() {
   elements.wrongCount.textContent = 0;
   elements.timer.classList.remove('warning');
   updateTimer();
-  showCurrentWord();
+  
+  elements.currentWord.style.opacity = 0; // 倒计时期间隐藏词语
 
   showPage('game');
 
   if (gameState.timerInterval) {
     clearInterval(gameState.timerInterval);
+    gameState.timerInterval = null;
   }
 
-  // 开始倒计时
-  gameState.timerInterval = setInterval(function() {
-    if (gameState.isPlaying) {
-      gameState.timeLeft--;
-      updateTimer();
-      if (gameState.timeLeft <= 0) {
-        endGame();
-      }
-    }
-  }, 1000);
+  startCountdown(function() {
+    gameState.isPlaying = true;
+    gameState.canTrigger = true;
+    showCurrentWord();
 
-  startGyroscope();
+    // 开始游戏倒计时
+    gameState.timerInterval = setInterval(function() {
+      if (gameState.isPlaying) {
+        gameState.timeLeft--;
+        updateTimer();
+        if (gameState.timeLeft <= 0) {
+          endGame();
+        }
+      }
+    }, 1000);
+
+    startGyroscope();
+  });
 }
 
 // 结束游戏
